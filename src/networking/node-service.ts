@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import ResponseUtils from '../util/response-utils'
 import { SERVICE_URL } from '../util/constants'
 
@@ -27,7 +26,7 @@ export default class NodeRepository {
         return new Promise((resolve, reject) => {
             fetch(`${SERVICE_URL}/tx?chain=${chain}&txid=${txid}`, {
                 method: 'get',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'x-api-key': apiKey
                 }

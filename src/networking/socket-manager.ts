@@ -1,6 +1,6 @@
 import { MessageTypes } from "./message-types"
 import { SOCKET_URL } from "../util/constants"
-import WebSocket from 'ws'
+import * as websocket from 'websocket'
 
 export default class SocketManager {
 
@@ -13,15 +13,8 @@ export default class SocketManager {
 
     public async connect() {
         return new Promise((resolve, reject) => {
-
-            // Create the socket
-            this.webSocket = new WebSocket(SOCKET_URL, ['token', this.apiKey])
-
-            // Open the connection
-            this.webSocket.onopen = (event: Event) => {
-                resolve()
-            }
-
+            this.webSocket = new websocket.w3cwebsocket(SOCKET_URL, ['token', this.apiKey])
+            this.webSocket.onopen = (event: Event) => resolve()
         })
     }
 

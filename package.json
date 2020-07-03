@@ -1,9 +1,12 @@
 {
   "name": "chainflame",
-  "version": "1.0.0",
+  "version": "1.0.22",
   "description": "A super simple way to connect to blockchains",
-  "main": "chainflame.js",
-  "bin": "chainflame.js",
+  "main": "lib/chainflame.js",
+  "bin": "lib/chainflame.js",
+  "types": "lib/chainflame.d.ts",
+  "prepare": "npm run build",
+  "prepublish": "npm run build",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node lib/test.js",
@@ -18,14 +21,13 @@
   "author": "Mike Miller",
   "license": "ISC",
   "dependencies": {
-    "@types/node-fetch": "^2.5.7",
+    "@types/websocket": "^1.0.0",
     "@types/ws": "^7.2.6",
     "bip39": "^3.0.2",
     "bitcoin-address-validation": "^1.0.2",
     "bitcoinjs-lib": "^5.1.10",
-    "node-fetch": "^2.6.0",
     "satoshi-bitcoin-ts": "^0.2.4",
     "typescript": "^3.7.5",
-    "ws": "^7.3.0"
+    "websocket": "^1.0.31"
   }
 }
