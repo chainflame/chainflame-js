@@ -37,6 +37,21 @@ export default class NodeRepository {
         })
     }
 
+    public static async getAccount(chain: string, apiKey: string, addresses: string[], satoshis: boolean, offset: number, limit: number | null, confirmations: number, order: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            fetch(`${SERVICE_URL}/account?chain=${chain}&addresses=${addresses}&satoshis=${satoshis}&offset=${offset}&limit=${limit}&confirmations=${confirmations}&order=${order}`, {
+                method: 'get',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey
+                }
+            })
+            .then(res => ResponseUtils.parse(res))
+            .then(json => resolve(json))
+            .catch(error => reject(error))
+        })
+    }
+
     // Broadcasts the transaction to the blockchain
     public static async broadcastTx(chain: string, apiKey: string, txHex: string): Promise<any> {
 

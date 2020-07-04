@@ -7,15 +7,18 @@ import { Keyring } from '../util/bitcoin/keyring'
 import { TransactionBuilder } from "./transaction-builder"
 import NodeService from '../networking/node-service'
 
-export default class Bitcoin {
+export default class BitcoinAccount {
 
     private readonly socketManager: SocketManager
     private readonly chain: Chain
     private readonly apiKey: string
     private keyrings: Keyring[] = []
 
-    public confirmationCount = 6
-    public useSatoshis = false
+    private accountSatoshis = false
+    private accountConfirmations = 6
+    private accountOffset: number = 0
+    private accountLimit: number | null = null
+    private accountOrder: string = 'desc'
 
     constructor(apiKey: string, chain: Chain) {
         this.apiKey = apiKey
@@ -23,7 +26,7 @@ export default class Bitcoin {
         this.socketManager = new SocketManager(apiKey)
     }
 
-    public setWallet(password: string) {
+    public setAccount(password: string) {
         this.keyrings = []
         const keyring = Keygen.getKeyring(this.chain, password, 0) // TODO: Need a solution to the key index piece
         if (keyring) this.keyrings.push(keyring)
@@ -34,7 +37,7 @@ export default class Bitcoin {
 
         if (!this.keyrings) {
             throw {
-                message: 'No wallet found.'
+                message: 'No account found.'
             }
         }
 
@@ -51,7 +54,7 @@ export default class Bitcoin {
 
         if (!this.keyrings) {
             throw {
-                message: 'No wallet found.'
+                message: 'No account found.'
             }
         }
 
@@ -66,7 +69,36 @@ export default class Bitcoin {
         return addresses
     }
 
-    public async addWalletListener(onWalletUpdate: (wallet: any) => void) {
+    // -- Modifiers on the listener
+
+    public offset(offset: number): BitcoinAccount {
+        this.accountOffset = offset
+        return this
+    }
+
+    public limit(limit: number | null): BitcoinAccount {
+        this.accountLimit = limit
+        return this
+    }
+
+    public satoshis(satoshis: boolean): BitcoinAccount {
+        this.accountSatoshis = satoshis
+        return this
+    }
+
+    public confirmations(confirmations: number): BitcoinAccount {
+        this.accountConfirmations = confirmations
+        return this
+    }
+
+    public order(order: string): BitcoinAccount {
+        this.accountOrder = order
+        return this
+    }
+
+    // -- Fetching
+
+    public async addAccountListener(onAccountUpdate: (account: any) => void) {
 
         // Connect the socket
         await this.socketManager.connect()
@@ -74,15 +106,18 @@ export default class Bitcoin {
         // List to the payments
         this.socketManager.addMessageListener(
             MessageTypes.Payments,
-            onWalletUpdate
+            onAccountUpdate
         )
 
         // Tell the listener what to listen to
         this.updatePaymentListener(
             this.chain, 
             this.getAllAddresses(), 
-            this.useSatoshis, 
-            this.confirmationCount
+            this.accountSatoshis,
+            this.accountOffset,
+            this.accountLimit,
+            this.accountConfirmations,
+            this.accountOrder
         )
         
     }
@@ -91,16 +126,31 @@ export default class Bitcoin {
         this.socketManager.close()
     }
 
+    public async getAccount() {
+        return NodeService.getAccount(
+            this.chain, 
+            this.apiKey,
+            this.getAllAddresses(), 
+            this.accountSatoshis,
+            this.accountOffset,
+            this.accountLimit,
+            this.accountConfirmations,
+            this.accountOrder
+        )
+    }
+
     // Updates the payment listener for this socket
     // These are the payments that happen on the blockchain
-    private updatePaymentListener(chain: string, addresses: string[], inSatoshis: boolean, confirmations: number = 6) {
+    private updatePaymentListener(chain: string, addresses: string[], satoshis: boolean, offset: number, limit: number | null, confirmations: number, order: string) {
         this.socketManager.send({
             type: MessageTypes.Payments,
-            uuid: 'some-uuid',
             chain: chain,
             addresses: addresses,
-            inSatoshis: inSatoshis,
+            satoshis: satoshis,
+            offset: offset,
+            limit: limit,
             confirmations: confirmations,
+            order: order
         })
     }
 
@@ -109,7 +159,7 @@ export default class Bitcoin {
 
         if (!this.keyrings) {
             throw {
-                message: 'No wallet found.'
+                message: 'No account found.'
             }
         }
 
