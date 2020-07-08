@@ -6,6 +6,7 @@ import { BitcoinAddress } from "../util/bitcoin/address"
 import { Keyring } from '../util/bitcoin/keyring'
 import { TransactionBuilder } from "./transaction-builder"
 import NodeService from '../networking/node-service'
+import { ValueUtils } from "../util/bitcoin/value-utils"
 
 export default class BitcoinAccount {
 
@@ -162,6 +163,18 @@ export default class BitcoinAccount {
             }
         }
 
+        if (this.accountSatoshis && !Number.isInteger(amount)) {
+            throw {
+                message: 'Amount is not in satoshis.'
+            }
+        }
+
+        if (this.accountSatoshis && !Number.isInteger(fee)) {
+            throw {
+                message: 'Fee is not in satoshis.'
+            }
+        }
+
         // Returns the hex of the raw transaction
         // If wanted, this could be used to broadcast
         // to another raw hex broadcaster
@@ -169,8 +182,8 @@ export default class BitcoinAccount {
             this.apiKey,
             this.chain,  
             this.keyrings, 
-            amount, 
-            fee, 
+            this.accountSatoshis ? amount : ValueUtils.toSats(amount), 
+            this.accountSatoshis ? fee : ValueUtils.toSats(fee), 
             toAddress,
             changeAddress ?? this.getAddress(), 
             this.accountConfirmations,

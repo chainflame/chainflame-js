@@ -1,6 +1,6 @@
 {
   "name": "chainflame",
-  "version": "1.0.107",
+  "version": "1.0.1010",
   "description": "A super simple way to connect to blockchains",
   "main": "lib/chainflame.js",
   "bin": "lib/chainflame.js",

@@ -8,19 +8,21 @@ import { Network } from 'bitcoinjs-lib'
 
 export class TransactionBuilder {
 
-    public static async build(apiKey: string, chain: Chain, keyrings: any[], amount: number, fee: number, toAddress: string, changeAddress: string, confirmations: number, message?: string) {
+    public static async build(apiKey: string, chain: Chain, keyrings: any[], valueInSats: number, feeInSats: number, toAddress: string, changeAddress: string, confirmations: number, message?: string) {
 
         // Ensure the amounts and address are safe
         const network = this.getNetwork(chain)
-        const invoice = this.getInvoice(amount, fee)
+        const invoice = this.getInvoice(valueInSats, feeInSats)
+
+        console.log(invoice)
 
         // Create the inputs
-        const inputs = await this.getInputs(apiKey, chain, network, keyrings, invoice.total.raw, confirmations)
-        const satsChange = this.getChangeAmount(inputs, invoice.total.sats)
-        const outputs = await this.getOutputs(invoice.amount.sats, toAddress, satsChange, changeAddress)
+        const inputs = await this.getInputs(apiKey, chain, network, keyrings, invoice.total, confirmations)
+        const change = this.getChangeAmount(inputs, invoice.total)
+        const outputs = await this.getOutputs(invoice.amount, toAddress, change, changeAddress)
 
         console.log(inputs)
-        console.log(satsChange)
+        console.log(change)
         console.log(outputs)
 
         // Create a hex for the inputs and outputs then push it
@@ -109,7 +111,7 @@ export class TransactionBuilder {
         // Get the current total
         let inputTotal = 0
         inputs.forEach(input => {
-            inputTotal += ValueUtils.toSats(input!.output.value)
+            inputTotal += input!.output.value
         })
 
         // Ensure user has enough funds to send
@@ -156,7 +158,7 @@ export class TransactionBuilder {
             const address = input.address
             const txid = input.txid
             const index = input.index
-            const value = ValueUtils.toSats(input.value)
+            const value = input.value
             const type = (validator.default(address) as any).type // TODO this is strange
             const payment = this.getPayment(type, privateKey, network)
             const script = bitcoinlib.address.toOutputScript(address, network)
@@ -202,27 +204,11 @@ export class TransactionBuilder {
     }
 
     private static getInvoice(amount: number, fee: number) {
-
-        // Get sats values
-        const satsAmount = ValueUtils.toSats(amount)
-        const satsFee = ValueUtils.toSats(fee)
-        const satsTotal = satsAmount + satsFee
-
         return {
-            amount: {
-                sats: satsAmount,
-                raw: amount
-            },
-            fee: {
-                sats: satsFee,
-                raw: fee
-            },
-            total: {
-                sats: satsTotal,
-                raw: amount + fee
-            }
+            amount: amount,
+            fee: fee,
+            total: amount + fee
         }
-        
     }
 
     // Creates an unsigned input
