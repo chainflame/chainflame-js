@@ -36,11 +36,11 @@ export default class ChainFlame {
         this.onAccountChange = null
     }
 
-    public logout() {
+    public async logout() {
 
         // Remove the account
         if (this.account) {
-            this.account.closeAccounts()
+            await this.account.closeAccounts()
             this.account = null
         }
 
@@ -48,6 +48,7 @@ export default class ChainFlame {
         if (this.onAccountChange) {
             this.onAccountChange(this.account)
         }
+
     }
 
 }

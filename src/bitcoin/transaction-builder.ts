@@ -70,6 +70,14 @@ export class TransactionBuilder {
 
         // Find utxos for those addresses
         const utxos = await NodeService.getUtxos(chain, apiKey, addresses, amount, confirmations)
+
+        // Ensure the user has enough utxos to spend
+        if (!utxos || !utxos.length) {
+            throw {
+                message: 'Not enough confirmed funds'
+            }
+        }
+
         const inputs = utxos.map((utxo: any) => {
 
             // Get the matching keyring
@@ -126,7 +134,6 @@ export class TransactionBuilder {
 
         // If change is possible, reuse an old address for it
         if (satsChange > 0) {
-            // const changeAddress = keyring.addresses.p2sh
             outputs.push({
                 address: changeAddress,
                 value: satsChange

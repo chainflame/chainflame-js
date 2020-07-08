@@ -122,8 +122,8 @@ export default class BitcoinAccount {
         
     }
 
-    public removeTransactionListener() {
-        this.socketManager.close()
+    public async removeTransactionListener() {
+        return await this.socketManager.close()
     }
 
     public async getAccount() {
@@ -154,8 +154,7 @@ export default class BitcoinAccount {
         })
     }
 
-    // Creates and sends a bitcoin transaction on the blockchain
-    public async send(amount: number, fee: number, toAddress: string, message?: string, changeAddress?: string, confirmations: number = 6) {
+    public async buildTransaction(amount: number, fee: number, toAddress: string, message?: string, changeAddress?: string) {
 
         if (!this.keyrings) {
             throw {
@@ -163,8 +162,10 @@ export default class BitcoinAccount {
             }
         }
 
-        // Ensure the amounts and address are safe
-        const txHex = await TransactionBuilder.build(
+        // Returns the hex of the raw transaction
+        // If wanted, this could be used to broadcast
+        // to another raw hex broadcaster
+        return TransactionBuilder.build(
             this.apiKey,
             this.chain,  
             this.keyrings, 
@@ -172,12 +173,15 @@ export default class BitcoinAccount {
             fee, 
             toAddress,
             changeAddress ?? this.getAddress(), 
-            confirmations,
+            this.accountConfirmations,
             message
         )
 
-        console.log(txHex)
+    }
 
+    // Builds and sends a bitcoin transaction on the blockchain
+    public async send(amount: number, fee: number, toAddress: string, message?: string, changeAddress?: string) {
+        const txHex = await this.buildTransaction(amount, fee, toAddress, message, changeAddress)
         return NodeService.broadcastTx(this.chain, this.apiKey, txHex)
     }
 

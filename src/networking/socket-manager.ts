@@ -27,19 +27,11 @@ export default class SocketManager {
         this.webSocket.onmessage = (event: MessageEvent) => {
             console.log('Message received')
             try {
-                
                 const data = JSON.parse(event.data)
-                // TODO: Handle type here
-                onMessageReceived(data)
-
+                if (data.type === type) onMessageReceived(data)
             } catch (error) {
                 console.error('JSON issue with message')
             }
-        }
-
-        this.webSocket.onclose = (event: CloseEvent) => {
-            console.log('Socket closed')
-            console.log(event)
         }
 
         this.webSocket.onerror = (event: Event) => {
@@ -49,10 +41,19 @@ export default class SocketManager {
 
     }
 
-    public close() {
-        if (this.webSocket) {
+    public async close() {
+        return new Promise((resolve, reject) => {
+
+            if (!this.webSocket) {
+                resolve()
+                return
+            }
+
+            // Close with listener
+            this.webSocket.onclose = () => resolve()
             this.webSocket.close()
-        }
+            
+        })
     }
 
     public send(data: any) {

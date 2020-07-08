@@ -32,9 +32,10 @@ export default class Account {
         })
     }
 
-    public closeAccounts() {
+    public async closeAccounts() {
         const accounts = [this.bitcoin, this.bitcoinTestnet, this.bitcoinRegtest]
-        accounts.forEach(account => account.removeTransactionListener())
+        const closes = accounts.map(account => account.removeTransactionListener())
+        return await Promise.all(closes)
     }
 
 }
